@@ -1,0 +1,20 @@
+{
+  "id": "/",
+  "name": "SmartStock — Қойма есебі",
+  "short_name": "SmartStock",
+  "description": "Шағын дүкендерге тауар және сатылым есебі",
+  "lang": "kk",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f8fbfa",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
