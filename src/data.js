@@ -26,7 +26,31 @@ export async function signInGoogle(){if(!supa)throw Error('Configure Supabase to
 export async function signOut(){if(!supa)return;const {error}=await supa.auth.signOut();if(error)throw error}
 export async function load(){if(!online){const s=demoState();return {products:s.products,sales:s.sales}}if(!currentUser)throw Error('Please sign in to load inventory');const [p,s]=await Promise.all([supa.from('products').select('*').order('created_at',{ascending:false}),supa.from('sales').select('id,product_id,quantity,unit_price,total,created_at,product_name').order('created_at',{ascending:false}).limit(500)]);if(p.error)throw p.error;if(s.error)throw s.error;return {products:p.data,sales:s.data}}
 const positive=(n)=>Number.isFinite(Number(n))&&Number(n)>=0;
-export async function saveProduct(p){const value={name:p.name.trim(),sku:p.sku.trim(),category:p.category.trim()||'Other',price:Number(p.price),cost:Number(p.cost),min_stock:Number(p.min_stock)};if(!value.name||!value.sku||!positive(value.price)||!positive(value.cost)||!Number.isInteger(value.min_stock)||value.min_stock<0)throw Error('Please enter valid product fields');if(!online){const s=demoState();if(s.products.some(x=>x.sku.toLowerCase()===value.sku.toLowerCase()&&x.id!==p.id))throw Error('SKU already exists');if(p.id){const x=s.products.find(x=>x.id===p.id);if(!x)throw Error('Product not found');Object.assign(x,value)}else s.products.unshift({...value,id:randomId(),quantity:0});setDemo(s);return}if(!currentUser)throw Error('Sign in first');const q=p.id?supa.from('products').update(value).eq('id',p.id):supa.from('products').insert({...value,owner_id:currentUser.id});const {error}=await q;if(error)throw error}
+export async function saveProduct(p){
+ const value={name:String(p.name||'').trim(),sku:String(p.sku||'').trim(),category:String(p.category||'').trim()||'Other',price:Number(p.price),cost:Number(p.cost),min_stock:Number(p.min_stock)};
+ const requested=Number(p.quantity);
+ if(!value.name||!value.sku||!positive(value.price)||!positive(value.cost)||!Number.isInteger(value.min_stock)||value.min_stock<0||!Number.isInteger(requested)||requested<0)throw Error('Please enter valid product fields and a whole quantity of 0 or more');
+ if(!online){
+  const s=demoState();
+  if(s.products.some(x=>x.sku.toLowerCase()===value.sku.toLowerCase()&&x.id!==p.id))throw Error('SKU already exists');
+  if(p.id){const x=s.products.find(x=>x.id===p.id);if(!x)throw Error('Product not found');Object.assign(x,value,{quantity:requested})}
+  else s.products.unshift({...value,id:randomId(),quantity:requested});
+  setDemo(s);return;
+ }
+ if(!currentUser)throw Error('Sign in first');
+ if(p.id){
+  const {data:existing,error:readError}=await supa.from('products').select('quantity').eq('id',p.id).single();
+  if(readError)throw readError;
+  const {error}=await supa.from('products').update(value).eq('id',p.id);
+  if(error)throw error;
+  const delta=requested-existing.quantity;
+  if(delta!==0)await adjustStock(p.id,delta);
+ }else{
+  const {data:created,error}=await supa.from('products').insert({...value,owner_id:currentUser.id}).select('id').single();
+  if(error)throw error;
+  if(requested!==0)await adjustStock(created.id,requested);
+ }
+}
 export async function adjustStock(id,delta){if(!Number.isInteger(Number(delta))||Number(delta)===0)throw Error('Enter a non-zero whole quantity');if(!online){const s=demoState();const p=s.products.find(x=>x.id===id);if(!p||p.quantity+Number(delta)<0)throw Error('Insufficient stock');p.quantity+=Number(delta);setDemo(s);return}const {error}=await supa.rpc('adjust_stock',{p_id:id,p_delta:Number(delta)});if(error)throw error}
 export async function recordSale(id,quantity){quantity=Number(quantity);if(!Number.isInteger(quantity)||quantity<=0)throw Error('Enter a positive whole quantity');if(!online){const s=demoState();const p=s.products.find(x=>x.id===id);if(!p||quantity>p.quantity)throw Error('Not enough stock');p.quantity-=quantity;s.sales.unshift({id:randomId(),product_id:id,product_name:p.name,quantity,unit_price:p.price,total:Math.round(p.price*quantity),created_at:new Date().toISOString()});setDemo(s);return}const {error}=await supa.rpc('record_sale',{p_id:id,p_quantity:quantity});if(error)throw error}
 export async function removeProduct(id){if(!online){const s=demoState();s.products=s.products.filter(x=>x.id!==id);setDemo(s);return}const {error}=await supa.from('products').delete().eq('id',id);if(error)throw error}
