@@ -1,4 +1,8 @@
-# SmartStock — Small Shop Inventory MVP
+# SmartStock — Inventory & Sales Management Web App
+
+**[Live demo](https://smartstock-inventory-six.vercel.app)** · [Source code](https://github.com/Yerb0l-hub/SmartStock)
+
+**Status:** deployed prototype; initial inventory and sales flow tested. Barcode camera support and printable receipts require device/browser testing.
 
 A lightweight, responsive inventory and sales management app for small shops. Built using Vite, vanilla JavaScript, Vercel and Supabase.
 
@@ -7,6 +11,10 @@ A lightweight, responsive inventory and sales management app for small shops. Bu
 - Product CRUD (name, SKU, category, sale price, purchase cost, low-stock threshold)
 - Stock corrections/replenishment, sales recording with automatic stock deduction
 - Sales history and searchable inventory
+- Sales analytics: revenue, units sold, top products, period filters, daily revenue chart, and estimated gross profit
+- CSV export of product and sales records
+- Barcode/SKU search with browser camera support where available, plus manual input fallback
+- Printable transaction summaries using the browser's **Print / Save as PDF** option (not fiscal receipts)
 - Offline-friendly local demo mode with sample **fictional** inventory
 - Supabase Auth (email/password, optional Google) and per-user private inventory
 - Database-side atomic sales and adjustments to prevent overselling
@@ -40,10 +48,10 @@ Without environment variables the app starts in **Demo workspace**. Data lives i
 ## Safety & limitations
 
 - The demo inventory and prices are illustrative, not real JJJ Market data. No personal or business data is included.
-- The project is a **pilot**: it is not accounting/tax software and has no returns, VAT, barcode scanning, receipts, or staff roles.
+- The project is a **pilot**: it is not accounting/tax software and has no returns, VAT reporting, fiscal receipts, or staff roles. Barcode scanning depends on browser support, and printable receipts are not official fiscal documents.
 - Stock updates and sales use server-side Postgres functions and row locks; client input is validated, and cross-user access is protected with row-level security. For larger businesses, add audit logs, role-based permissions and reports before using in production.
 - Currency is hard-coded to KZT for this MVP.
 - Only claim actual users or business impact in your CV after testing and deployment.
 
 ## Deployment status
-Vercel project `smartstock-inventory` has been created. GitHub repository and Supabase database have not yet been provisioned. Do not use real store data until the RLS and cross-account tests pass.
+The app is deployed to [Vercel](https://smartstock-inventory-six.vercel.app), and the GitHub repository is active. Supabase authentication has been configured; the owner reported a successful test of adding 20 units, selling 3, and seeing 17 remaining. Barcode scanning and printable receipts were implemented but are not yet confirmed with end-to-end user tests. Do not use real store data until cross-account privacy and inventory workflows have been independently verified.
