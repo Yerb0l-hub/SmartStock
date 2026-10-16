@@ -1,5 +1,5 @@
 import './style.css';
-import readXlsxFile from 'read-excel-file/browser';
+import readXlsxFile from 'read-excel-file';
 import {online,session,observeAuth,signIn,signUp,resendConfirmation,requestPasswordReset,updatePassword,signInGoogle,signOut,load,saveProduct,adjustStock,recordSale,removeProduct,resetDemo} from './data.js';
 const root=document.querySelector('#app');
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
